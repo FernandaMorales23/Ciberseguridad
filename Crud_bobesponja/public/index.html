@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CRUD Bob Esponja</title>
+<style>
+body {
+font-family: Arial, sans-serif;
+background-color: #f4f4f4;
+margin: 0;
+padding: 20px;
+text-align: center;
+}
+h1 {
+color: #ffcc00;
+text-shadow: 2px 2px 3px #000;
+}
+.container {
+max-width: 600px;
+margin: 20px auto;
+background: white;
+padding: 20px;
+border-radius: 10px;
+box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+}
+input, button {
+width: 100%;
+padding: 10px;
+margin: 5px 0;
+border-radius: 5px;
+border: 1px solid #ccc;
+font-size: 16px;
+}
+button {
+background-color: #ffcc00;
+border: none;
+cursor: pointer;
+font-weight: bold;
+}
+button:hover {
+background-color: #ff9900;
+}
+ul {
+list-style: none;
+padding: 0;
+}
+.card {
+background: #ffcc00;
+color: black;
+padding: 10px;
+margin: 10px 0;
+border-radius: 5px;
+box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+}
+</style>
+</head>
+<body>
+
+<h1>CRUD de Personajes de Bob Esponja</h1>
+
+<div class="container">
+<h2>Agregar Personaje</h2>
+<input type="text" id="nombre" placeholder="Nombre">
+<input type="number" id="edad" placeholder="Edad">
+<input type="text" id="ocupacion" placeholder="Ocupación">
+<input type="text" id="ciudad" placeholder="Ciudad">
+<input type="text" id="color" placeholder="Color favorito">
+<input type="text" id="tipo" placeholder="Tipo de personaje">
+<input type="text" id="habilidad" placeholder="Habilidad especial">
+<input type="text" id="frase" placeholder="Frase característica">
+<button onclick="agregarPersonaje()">Agregar Personaje</button>
+</div>
+
+<div class="container">
+<h2>Lista de Personajes</h2>
+<button onclick="obtenerPersonajes()">Obtener Personajes</button>
+<ul id="listaPersonajes"></ul>
+</div>
+
+<div class="container">
+<h2>Actualizar Personaje</h2>
+<input type="number" id="idActualizar" placeholder="ID del personaje">
+<input type="text" id="nombreActualizar" placeholder="Nuevo nombre">
+<input type="number" id="edadActualizar" placeholder="Nueva edad">
+<input type="text" id="ocupacionActualizar" placeholder="Nueva ocupación">
+<input type="text" id="ciudadActualizar" placeholder="Nueva ciudad">
+<input type="text" id="colorActualizar" placeholder="Nuevo color favorito">
+<input type="text" id="tipoActualizar" placeholder="Nuevo tipo">
+<input type="text" id="habilidadActualizar" placeholder="Nueva habilidad">
+<input type="text" id="fraseActualizar" placeholder="Nueva frase">
+<button onclick="actualizarPersonaje()">Actualizar Personaje</button>
+</div>
+
+<div class="container">
+<h2>Eliminar Personaje</h2>
+<input type="number" id="idEliminar" placeholder="ID del personaje">
+<button onclick="eliminarPersonaje()">Eliminar</button>
+</div>
+
+<script>
+function validarTexto(texto) {
+const regex = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ ]+$/;
+return regex.test(texto.trim());
+}
+
+function agregarPersonaje() {
+let nombre = document.getElementById('nombre').value.trim();
+let edad = document.getElementById('edad').value.trim();
+let ocupacion = document.getElementById('ocupacion').value.trim();
+let ciudad = document.getElementById('ciudad').value.trim();
+let color = document.getElementById('color').value.trim();
+let tipo = document.getElementById('tipo').value.trim();
+let habilidad = document.getElementById('habilidad').value.trim();
+let frase = document.getElementById('frase').value.trim();
+
+if (!nombre || !edad || !ocupacion || !ciudad || !color || !tipo || !habilidad || !frase) {
+alert("Todos los campos son obligatorios.");
+return;
+}
+
+if (![nombre, ocupacion, ciudad, color, tipo, habilidad, frase].every(validarTexto)) {
+alert("Los campos no deben contener caracteres especiales.");
+return;
+}
+
+fetch('/agregarPersonaje', {
+method: 'POST',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ nombre, edad, ocupacion, ciudad, color, tipo, habilidad, frase })
+})
+.then(response => response.text())
+.then(data => {
+alert(data);
+obtenerPersonajes();
+});
+}
+
+function obtenerPersonajes() {
+fetch('/obtenerPersonajes')
+.then(response => response.json())
+.then(data => {
+let lista = document.getElementById('listaPersonajes');
+lista.innerHTML = '';
+data.forEach(personaje => {
+let item = document.createElement('li');
+item.classList.add("card");
+item.innerHTML = `<strong>ID:</strong> ${personaje.id}
+<strong>Nombre:</strong> ${personaje.nombre}
+<br><strong>Edad:</strong> ${personaje.edad}
+<br><strong>Ocupación:</strong> ${personaje.ocupacion}
+<br><strong>Ciudad:</strong> ${personaje.ciudad}
+<br><strong>Color favorito:</strong> ${personaje.color}
+<br><strong>Tipo:</strong> ${personaje.tipo}
+<br><strong>Habilidad:</strong> ${personaje.habilidad}
+<br><strong>Frase:</strong> "${personaje.frase}"`;
+lista.appendChild(item);
+});
+});
+}
+
+function actualizarPersonaje() {
+let id = document.getElementById('idActualizar').value.trim();
+let nombre = document.getElementById('nombreActualizar').value.trim();
+let edad = document.getElementById('edadActualizar').value.trim();
+let ocupacion = document.getElementById('ocupacionActualizar').value.trim();
+let ciudad = document.getElementById('ciudadActualizar').value.trim();
+let color = document.getElementById('colorActualizar').value.trim();
+let tipo = document.getElementById('tipoActualizar').value.trim();
+let habilidad = document.getElementById('habilidadActualizar').value.trim();
+let frase = document.getElementById('fraseActualizar').value.trim();
+
+if (!id || !nombre || !edad || !ocupacion || !ciudad || !color || !tipo || !habilidad || !frase) {
+alert("Todos los campos son obligatorios.");
+return;
+}
+
+if (![nombre, ocupacion, ciudad, color, tipo, habilidad, frase].every(validarTexto)) {
+alert("Los campos no deben contener caracteres especiales.");
+return;
+}
+
+fetch(`/actualizarPersonaje/${id}`, {
+method: 'PUT',
+headers: { 'Content-Type': 'application/json' },
+body: JSON.stringify({ nombre, edad, ocupacion, ciudad, color, tipo, habilidad, frase })
+})
+.then(response => response.text())
+.then(data => {
+alert(data);
+obtenerPersonajes();
+});
+}
+
+function eliminarPersonaje() {
+let id = document.getElementById('idEliminar').value.trim();
+
+if (!id) {
+alert("Por favor ingresa un ID válido.");
+return;
+}
+
+fetch(`/eliminarPersonaje/${id}`, {
+method: 'DELETE'
+})
+.then(response => response.text())
+.then(data => {
+alert(data);
+obtenerPersonajes();
+});
+}
+</script>
+<script>function eliminarEtiquetasPeligrosas(html) {
+    var regex = /<[^>]+>/g;
+    return html.replace(regex, '');
+    }
+    function procesarHTML() {
+    var inputHTML = document.getElementById('inputHTML').value;
+    var resultado = eliminarEtiquetasPeligrosas(inputHTML);
+    document.getElementById('resultado').textContent = resultado;
+    }</script>
+</body>
+</html>
