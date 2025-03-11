@@ -26,16 +26,13 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
-// Función para limpiar entradas de usuario
 function sanitizeInput(input) {
-return input.trim().replace(/<\/?[^>]+(>|$)/g, ""); // Elimina etiquetas HTML
+return input.trim().replace(/<\/?[^>]+(>|$)/g, "");
 }
 
-// Crear personaje con validaciones
 app.post("/agregarPersonaje", (req, res) => {
 let { nombre, edad, ocupacion, ciudad, color, tipo, habilidad, frase } = req.body;
 
-// Sanitizar los datos
 nombre = sanitizeInput(nombre);
 ocupacion = sanitizeInput(ocupacion);
 ciudad = sanitizeInput(ciudad);
@@ -51,7 +48,6 @@ return res.status(400).send("Todos los campos son obligatorios");
 app.post('/pokemon', (req, res) => {
     const { nombre, tipo, edad } = req.body;
   
-    // Validación manual de la edad
     if (!edad || isNaN(edad) || edad < 1 || edad > 120) {
       return res.status(400).json({ error: 'La edad debe ser un número entre 1 y 120' });
     }
@@ -76,7 +72,6 @@ res.status(201).send("Personaje agregado con éxito");
 );
 });
 
-// Obtener personajes
 app.get("/obtenerPersonajes", (req, res) => {
 con.query("SELECT * FROM personaje", (err, results) => {
 if (err) {
@@ -87,12 +82,10 @@ res.json(results);
 });
 });
 
-// Actualizar personaje
 app.put("/actualizarPersonaje/:id", (req, res) => {
 const { id } = req.params;
 let { nombre, edad, ocupacion, ciudad, color, tipo, habilidad, frase } = req.body;
 
-// Sanitizar los datos
 nombre = sanitizeInput(nombre);
 ocupacion = sanitizeInput(ocupacion);
 ciudad = sanitizeInput(ciudad);
@@ -118,7 +111,6 @@ res.send("Personaje actualizado con éxito");
 );
 });
 
-// Eliminar personaje
 app.delete("/eliminarPersonaje/:id", (req, res) => {
 const { id } = req.params;
 
