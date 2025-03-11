@@ -48,6 +48,21 @@ if (!nombre || !edad || !ocupacion || !ciudad || !color || !tipo || !habilidad |
 return res.status(400).send("Todos los campos son obligatorios");
 }
 
+app.post('/pokemon', (req, res) => {
+    const { nombre, tipo, edad } = req.body;
+  
+    // Validación manual de la edad
+    if (!edad || isNaN(edad) || edad < 1 || edad > 120) {
+      return res.status(400).json({ error: 'La edad debe ser un número entre 1 y 120' });
+    }
+  
+    const sql = 'INSERT INTO pokemon (nombre, tipo, edad) VALUES (?, ?, ?)';
+    conexion.query(sql, [nombre, tipo, edad], (err, result) => {
+      if (err) return res.status(500).json({ error: err.message });
+      res.json({ mensaje: 'Pokémon agregado correctamente', id: result.insertId });
+    });
+  });
+
 con.query(
 "INSERT INTO personaje (nombre, edad, ocupacion, ciudad, color, tipo, habilidad, frase) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
 [nombre, edad, ocupacion, ciudad, color, tipo, habilidad, frase],
