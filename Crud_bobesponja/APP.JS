@@ -131,13 +131,13 @@ app.delete("/eliminarPersonaje/:id", (req, res) => {
       console.error("Error al eliminar personaje:", err);
       return res.status(500).send("Error al eliminar personaje");
     }
-
+  
     if (result.affectedRows === 0) {
       return res.status(404).send("Personaje no encontrado");
     }
-
-    res.send("Personaje eliminado con éxito");
-  });
+  
+    res.status(200).send("Personaje eliminado con éxito");
+  });  
 });
 
 app.use((err, req, res, next) => {
