@@ -4,21 +4,21 @@ const bodyParser = require("body-parser");
 const cors = require("cors");
 
 const app = express();
-const puerto = 8000;
+const puerto = 3000;
 
 const con = mysql.createConnection({
-host: "localhost",
-user: "root",
-password: "n0m3l0",
-database: "bobesponja_bd"
+  host: "localhost",
+  user: "root",
+  password: "n0m3l0",
+  database: "bobesponja_bd"
 });
 
 con.connect(err => {
-if (err) {
-console.error("Error al conectar con la base de datos:", err.message);
-return;
-}
-console.log("Conexión exitosa a la base de datos");
+  if (err) {
+    console.error("Error al conectar con la base de datos:", err.message);
+    return;
+  }
+  console.log("Conexión exitosa a la base de datos");
 });
 
 app.use(cors());
@@ -27,107 +27,124 @@ app.use(bodyParser.urlencoded({ extended: true }));
 app.use(express.static("public"));
 
 function sanitizeInput(input) {
-return input.trim().replace(/<\/?[^>]+(>|$)/g, "");
+  if (typeof input !== 'string') return input;
+  return input.trim().replace(/<\/?[^>]+(>|$)/g, "");
 }
 
-app.post("/agregarPersonaje", (req, res) => {
-let { nombre, edad, ocupacion, ciudad, color, tipo, habilidad, frase } = req.body;
-
-nombre = sanitizeInput(nombre);
-ocupacion = sanitizeInput(ocupacion);
-ciudad = sanitizeInput(ciudad);
-color = sanitizeInput(color);
-tipo = sanitizeInput(tipo);
-habilidad = sanitizeInput(habilidad);
-frase = sanitizeInput(frase);
-
-if (!nombre || !edad || !ocupacion || !ciudad || !color || !tipo || !habilidad || !frase) {
-return res.status(400).send("Todos los campos son obligatorios");
-}
-
-app.post('/pokemon', (req, res) => {
-    const { nombre, tipo, edad } = req.body;
+function validarCampos(req, res, next) {
+  let { nombre, edad, ocupacion, ciudad, color, tipo, habilidad, frase } = req.body;
   
-    if (!edad || isNaN(edad) || edad < 1 || edad > 120) {
-      return res.status(400).json({ error: 'La edad debe ser un número entre 1 y 120' });
+  if (!nombre || !edad || !ocupacion || !ciudad || !color || !tipo || !habilidad || !frase) {
+    return res.status(400).send("Todos los campos son obligatorios");
+  }
+  
+  const edadNum = Number(edad);
+  if (isNaN(edadNum)) {
+    return res.status(400).send("La edad debe ser un número");
+  }
+  
+  req.body.nombre = sanitizeInput(nombre);
+  req.body.ocupacion = sanitizeInput(ocupacion);
+  req.body.ciudad = sanitizeInput(ciudad);
+  req.body.color = sanitizeInput(color);
+  req.body.tipo = sanitizeInput(tipo);
+  req.body.habilidad = sanitizeInput(habilidad);
+  req.body.frase = sanitizeInput(frase);
+  req.body.edad = edadNum;
+  
+  if (req.body.nombre.length > 100 || 
+      req.body.ocupacion.length > 100 || 
+      req.body.ciudad.length > 100 || 
+      req.body.color.length > 50 || 
+      req.body.tipo.length > 50 || 
+      req.body.habilidad.length > 150 || 
+      req.body.frase.length > 255) {
+    return res.status(400).send("Uno o más campos exceden la longitud permitida");
+  }
+  
+  next();
+}
+
+app.post("/agregarPersonaje", validarCampos, (req, res) => {
+  const { nombre, edad, ocupacion, ciudad, color, tipo, habilidad, frase } = req.body;
+
+  con.query(
+    "INSERT INTO personaje (nombre, edad, ocupacion, ciudad, color, tipo, habilidad, frase) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
+    [nombre, edad, ocupacion, ciudad, color, tipo, habilidad, frase],
+    (err, result) => {
+      if (err) {
+        console.error("Error al agregar personaje:", err);
+        return res.status(500).send("Error al agregar personaje");
+      }
+      res.status(201).send("Personaje agregado con éxito");
     }
-  
-    const sql = 'INSERT INTO pokemon (nombre, tipo, edad) VALUES (?, ?, ?)';
-    conexion.query(sql, [nombre, tipo, edad], (err, result) => {
-      if (err) return res.status(500).json({ error: err.message });
-      res.json({ mensaje: 'Pokémon agregado correctamente', id: result.insertId });
-    });
-  });
-
-con.query(
-"INSERT INTO personaje (nombre, edad, ocupacion, ciudad, color, tipo, habilidad, frase) VALUES (?, ?, ?, ?, ?, ?, ?, ?)",
-[nombre, edad, ocupacion, ciudad, color, tipo, habilidad, frase],
-(err, result) => {
-if (err) {
-console.error("Error al agregar personaje:", err);
-return res.status(500).send("Error al agregar personaje");
-}
-res.status(201).send("Personaje agregado con éxito");
-}
-);
+  );
 });
 
 app.get("/obtenerPersonajes", (req, res) => {
-con.query("SELECT * FROM personaje", (err, results) => {
-if (err) {
-console.error("Error al obtener personajes:", err);
-return res.status(500).send("Error al obtener personajes");
-}
-res.json(results);
+  con.query("SELECT * FROM personaje", (err, results) => {
+    if (err) {
+      console.error("Error al obtener personajes:", err);
+      return res.status(500).send("Error al obtener personajes");
+    }
+    res.json(results);
+  });
 });
-});
 
-app.put("/actualizarPersonaje/:id", (req, res) => {
-const { id } = req.params;
-let { nombre, edad, ocupacion, ciudad, color, tipo, habilidad, frase } = req.body;
+app.put("/actualizarPersonaje/:id", validarCampos, (req, res) => {
+  const { id } = req.params;
+  const { nombre, edad, ocupacion, ciudad, color, tipo, habilidad, frase } = req.body;
 
-nombre = sanitizeInput(nombre);
-ocupacion = sanitizeInput(ocupacion);
-ciudad = sanitizeInput(ciudad);
-color = sanitizeInput(color);
-tipo = sanitizeInput(tipo);
-habilidad = sanitizeInput(habilidad);
-frase = sanitizeInput(frase);
+  const idNum = Number(id);
+  if (isNaN(idNum)) {
+    return res.status(400).send("ID inválido");
+  }
 
-if (!nombre || !edad || !ocupacion || !ciudad || !color || !tipo || !habilidad || !frase) {
-return res.status(400).send("Todos los campos son obligatorios");
-}
-
-con.query(
-"UPDATE personaje SET nombre = ?, edad = ?, ocupacion = ?, ciudad = ?, color = ?, tipo = ?, habilidad = ?, frase = ? WHERE id = ?",
-[nombre, edad, ocupacion, ciudad, color, tipo, habilidad, frase, id],
-(err, result) => {
-if (err) {
-console.error("Error al actualizar personaje:", err);
-return res.status(500).send("Error al actualizar personaje");
-}
-res.send("Personaje actualizado con éxito");
-}
-);
+  con.query(
+    "UPDATE personaje SET nombre = ?, edad = ?, ocupacion = ?, ciudad = ?, color = ?, tipo = ?, habilidad = ?, frase = ? WHERE id = ?",
+    [nombre, edad, ocupacion, ciudad, color, tipo, habilidad, frase, idNum],
+    (err, result) => {
+      if (err) {
+        console.error("Error al actualizar personaje:", err);
+        return res.status(500).send("Error al actualizar personaje");
+      }
+      
+      if (result.affectedRows === 0) {
+        return res.status(404).send("Personaje no encontrado");
+      }
+      
+      res.send("Personaje actualizado con éxito");
+    }
+  );
 });
 
 app.delete("/eliminarPersonaje/:id", (req, res) => {
-const { id } = req.params;
+  const { id } = req.params;
+  
+  const idNum = Number(id);
+  if (isNaN(idNum)) {
+    return res.status(400).send("ID inválido");
+  }
 
-con.query("DELETE FROM personaje WHERE id = ?", [id], (err, result) => {
-if (err) {
-console.error("Error al eliminar personaje:", err);
-return res.status(500).send("Error al eliminar personaje");
-}
+  con.query("DELETE FROM personaje WHERE id = ?", [idNum], (err, result) => {
+    if (err) {
+      console.error("Error al eliminar personaje:", err);
+      return res.status(500).send("Error al eliminar personaje");
+    }
 
-if (result.affectedRows === 0) {
-return res.status(404).send("Personaje no encontrado");
-}
+    if (result.affectedRows === 0) {
+      return res.status(404).send("Personaje no encontrado");
+    }
 
-res.send("Personaje eliminado con éxito");
+    res.send("Personaje eliminado con éxito");
+  });
 });
+
+app.use((err, req, res, next) => {
+  console.error(err.stack);
+  res.status(500).send('¡Algo salió mal!');
 });
 
-app.listen(3000, () => {
-console.log(`Servidor escuchando en el puerto 3000`);
+app.listen(puerto, () => {
+  console.log(`Servidor escuchando en el puerto ${puerto}`);
 });
