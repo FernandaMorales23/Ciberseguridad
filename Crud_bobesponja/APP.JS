@@ -121,6 +121,6 @@ res.send("Personaje eliminado con éxito");
 });
 });
 
-app.listen(puerto, () => {
-console.log(`Servidor escuchando en el puerto ${puerto}`);
+app.listen(3000, () => {
+console.log(`Servidor escuchando en el puerto 3000`);
 });
