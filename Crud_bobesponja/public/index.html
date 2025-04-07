@@ -12,7 +12,7 @@
             padding: 20px;
             text-align: center;
         }
-        h1 {
+        h1, h2 {
             color: #ffcc00;
             text-shadow: 2px 2px 3px #000;
         }
@@ -41,10 +41,6 @@
         button:hover {
             background-color: #ff9900;
         }
-        ul {
-            list-style: none;
-            padding: 0;
-        }
         .card {
             background: #ffcc00;
             color: black;
@@ -54,281 +50,311 @@
             box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
             text-align: left;
         }
-        .error {
-            color: red;
-            font-weight: bold;
-            margin-top: 5px;
+        .acciones {
+            display: flex;
+            gap: 5px;
+            margin-top: 10px;
         }
-        .loading {
+        .acciones button {
+            flex: 1;
+            padding: 5px;
+        }
+        .editar {
+            background-color: #4CAF50;
+            color: white;
+        }
+        .eliminar {
+            background-color: #f44336;
+            color: white;
+        }
+        #mensaje {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
             display: none;
-            margin: 10px auto;
+        }
+        .exito {
+            background-color: #dff0d8;
+            color: #3c763d;
+            border: 1px solid #d6e9c6;
+        }
+        .error {
+            background-color: #f2dede;
+            color: #a94442;
+            border: 1px solid #ebccd1;
         }
     </style>
 </head>
 <body>
+    <h1>CRUD de Personajes de Bob Esponja</h1>
 
-<h1>CRUD de Personajes de Bob Esponja</h1>
+    <div id="mensaje"></div>
 
-<div class="container">
-    <h2>Agregar Personaje</h2>
-    <form id="formAgregar" onsubmit="return false;">
-        <input type="text" id="nombre" placeholder="Nombre" maxlength="100">
-        <input type="number" id="edad" placeholder="Edad" min="0" max="1000">
-        <input type="text" id="ocupacion" placeholder="Ocupación" maxlength="100">
-        <input type="text" id="ciudad" placeholder="Ciudad" maxlength="100">
-        <input type="text" id="color" placeholder="Color favorito" maxlength="50">
-        <input type="text" id="tipo" placeholder="Tipo de personaje" maxlength="50">
-        <input type="text" id="habilidad" placeholder="Habilidad especial" maxlength="150">
-        <input type="text" id="frase" placeholder="Frase característica" maxlength="255">
-        <div id="errorAgregar" class="error"></div>
-        <button onclick="agregarPersonaje()">Agregar Personaje</button>
-    </form>
-</div>
+    <div class="container">
+        <h2>Registro de Usuario</h2>
+        <form id="registerForm">
+            <input type="text" id="newUsuario" placeholder="Nuevo Usuario" required>
+            <input type="password" id="newPassword" placeholder="Nueva Contraseña" required>
+            <button type="submit">Registrarse</button>
+        </form>
+    </div>
 
-<div class="container">
-    <h2>Lista de Personajes</h2>
-    <button onclick="obtenerPersonajes()">Obtener Personajes</button>
-    <div id="loadingPersonajes" class="loading">Cargando...</div>
-    <ul id="listaPersonajes"></ul>
-</div>
+    <div class="container">
+        <h2>Iniciar Sesión</h2>
+        <form id="loginForm">
+            <input type="text" id="usuario" placeholder="Usuario" required>
+            <input type="password" id="password" placeholder="Contraseña" required>
+            <button type="submit">Iniciar sesión</button>
+        </form>
+        <button onclick="logout()">Cerrar Sesión</button>
+    </div>
 
-<div class="container">
-    <h2>Actualizar Personaje</h2>
-    <form id="formActualizar" onsubmit="return false;">
-        <input type="number" id="idActualizar" placeholder="ID del personaje" min="1">
-        <input type="text" id="nombreActualizar" placeholder="Nuevo nombre" maxlength="100">
-        <input type="number" id="edadActualizar" placeholder="Nueva edad" min="0" max="1000">
-        <input type="text" id="ocupacionActualizar" placeholder="Nueva ocupación" maxlength="100">
-        <input type="text" id="ciudadActualizar" placeholder="Nueva ciudad" maxlength="100">
-        <input type="text" id="colorActualizar" placeholder="Nuevo color favorito" maxlength="50">
-        <input type="text" id="tipoActualizar" placeholder="Nuevo tipo" maxlength="50">
-        <input type="text" id="habilidadActualizar" placeholder="Nueva habilidad" maxlength="150">
-        <input type="text" id="fraseActualizar" placeholder="Nueva frase" maxlength="255">
-        <div id="errorActualizar" class="error"></div>
-        <button onclick="actualizarPersonaje()">Actualizar Personaje</button>
-    </form>
-</div>
+    <div class="container">
+        <h2>Agregar Personaje</h2>
+        <form id="personajeForm">
+            <input type="text" id="nombre" placeholder="Nombre" required>
+            <input type="number" id="edad" placeholder="Edad" required>
+            <input type="text" id="ocupacion" placeholder="Ocupación" required>
+            <input type="text" id="ciudad" placeholder="Ciudad" required>
+            <input type="text" id="color" placeholder="Color favorito" required>
+            <input type="text" id="tipo" placeholder="Tipo" required>
+            <input type="text" id="habilidad" placeholder="Habilidad" required>
+            <input type="text" id="frase" placeholder="Frase" required>
+            <input type="hidden" id="personajeId" value="">
+            <button type="submit" id="submitBtn">Agregar</button>
+            <button type="button" id="cancelBtn" style="display:none;" onclick="cancelarEdicion()">Cancelar</button>
+        </form>
+    </div>
 
-<div class="container">
-    <h2>Eliminar Personaje</h2>
-    <form id="formEliminar" onsubmit="return false;">
-        <input type="number" id="idEliminar" placeholder="ID del personaje" min="1">
-        <div id="errorEliminar" class="error"></div>
-        <button onclick="eliminarPersonaje()">Eliminar</button>
-    </form>
-</div>
+    <div class="container">
+        <h2>Lista de Personajes</h2>
+        <button onclick="cargarPersonajes()">Actualizar Lista</button>
+        <div id="listaPersonajes"></div>
+    </div>
 
-<script>
-    const API_URL = window.location.hostname === 'localhost' 
-        ? 'http://localhost:3000' 
-        : '';
-
-    function mostrarError(id, mensaje) {
-        const elemento = document.getElementById(id);
-        elemento.textContent = mensaje;
-        elemento.style.display = 'block';
-        
-        setTimeout(() => {
-            elemento.style.display = 'none';
-        }, 5000);
-    }
-
-    function validarTexto(texto) {
-        if (typeof texto !== 'string') return false;
-        const regex = /^[a-zA-Z0-9áéíóúÁÉÍÓÚñÑ .,!?¡¿'"\-_]+$/;
-        return texto.trim() !== '' && regex.test(texto);
-    }
-
-    function validarFormulario(campos, prefijo, errorId) {
-        document.getElementById(errorId).textContent = '';
-        
-        for (const campo of campos) {
-            const valor = document.getElementById(prefijo + campo).value.trim();
-            if (!valor) {
-                mostrarError(errorId, `El campo ${campo} es obligatorio.`);
-                return false;
-            }
+    <script>
+        function mostrarMensaje(mensaje, tipo) {
+            const mensajeDiv = document.getElementById("mensaje");
+            mensajeDiv.textContent = mensaje;
+            mensajeDiv.className = tipo;
+            mensajeDiv.style.display = "block";
+            
+            setTimeout(() => {
+                mensajeDiv.style.display = "none";
+            }, 3000);
         }
-        const camposTexto = ['nombre', 'ocupacion', 'ciudad', 'color', 'tipo', 'habilidad', 'frase'];
-        for (const campo of camposTexto) {
-            if (campos.includes(campo)) {
-                const valor = document.getElementById(prefijo + campo).value.trim();
-                if (!validarTexto(valor)) {
-                    mostrarError(errorId, `El campo ${campo} contiene caracteres no permitidos.`);
-                    return false;
-                }
-            }
-        }
-        
-        if (campos.includes('edad')) {
-            const edad = document.getElementById(prefijo + 'edad').value.trim();
-            if (isNaN(Number(edad)) || Number(edad) < 0 || Number(edad) > 1000) {
-                mostrarError(errorId, 'La edad debe ser un número entre 0 y 1000.');
-                return false;
-            }
-        }
-        
-        if (campos.includes('id')) {
-            const id = document.getElementById(prefijo + 'id').value.trim();
-            if (isNaN(Number(id)) || Number(id) <= 0) {
-                mostrarError(errorId, 'El ID debe ser un número positivo.');
-                return false;
-            }
-        }
-        
-        return true;
-    }
 
-    function agregarPersonaje() {
-        const campos = ['nombre', 'edad', 'ocupacion', 'ciudad', 'color', 'tipo', 'habilidad', 'frase'];
-        if (!validarFormulario(campos, '', 'errorAgregar')) return;
-        
-        const datos = {};
-        campos.forEach(campo => {
-            datos[campo] = document.getElementById(campo).value.trim();
-        });
-        datos.edad = Number(datos.edad);
-        
-        fetch(`${API_URL}/agregarPersonaje`, {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(datos)
-        })
-        .then(response => {
+        function manejarRespuesta(response) {
             if (!response.ok) {
-                return response.text().then(text => {
-                    throw new Error(text || 'Ocurrió un error al agregar el personaje');
+                return response.text().then(texto => {
+                    throw new Error(texto);
                 });
             }
             return response.text();
-        })
-        .then(data => {
-            alert(data);
-            document.getElementById('formAgregar').reset();
-            obtenerPersonajes();
-        })
-        .catch(error => {
-            mostrarError('errorAgregar', error.message);
-        });
-    }
+        }
 
-    function obtenerPersonajes() {
-        const listaElement = document.getElementById('listaPersonajes');
-        const loadingElement = document.getElementById('loadingPersonajes');
-        
-        listaElement.innerHTML = '';
-        loadingElement.style.display = 'block';
-        
-        fetch(`${API_URL}/obtenerPersonajes`)
-        .then(response => {
-            if (!response.ok) {
-                throw new Error('Error al obtener los personajes');
-            }
-            return response.json();
-        })
-        .then(data => {
-            loadingElement.style.display = 'none';
+        document.getElementById("registerForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            fetch("/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    usuario: document.getElementById("newUsuario").value,
+                    password: document.getElementById("newPassword").value
+                })
+            })
+            .then(manejarRespuesta)
+            .then(respuesta => {
+                mostrarMensaje(respuesta, "exito");
+                document.getElementById("registerForm").reset();
+            })
+            .catch(error => {
+                mostrarMensaje(error.message, "error");
+            });
+        });
+
+        document.getElementById("loginForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            fetch("/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    usuario: document.getElementById("usuario").value,
+                    password: document.getElementById("password").value
+                })
+            })
+            .then(manejarRespuesta)
+            .then(respuesta => {
+                mostrarMensaje(respuesta, "exito");
+                document.getElementById("loginForm").reset();
+                cargarPersonajes();
+            })
+            .catch(error => {
+                mostrarMensaje(error.message, "error");
+            });
+        });
+
+        function logout() {
+            fetch("/logout", {
+                credentials: 'include'
+            })
+            .then(manejarRespuesta)
+            .then(respuesta => {
+                mostrarMensaje(respuesta, "exito");
+                document.getElementById("listaPersonajes").innerHTML = "";
+            })
+            .catch(error => {
+                mostrarMensaje(error.message, "error");
+            });
+        }
+
+        document.getElementById("personajeForm").addEventListener("submit", function(event) {
+            event.preventDefault();
             
-            if (data.length === 0) {
-                listaElement.innerHTML = '<p>No hay personajes registrados.</p>';
-                return;
+            const personajeId = document.getElementById("personajeId").value;
+            const personajeData = {
+                nombre: document.getElementById("nombre").value,
+                edad: document.getElementById("edad").value,
+                ocupacion: document.getElementById("ocupacion").value,
+                ciudad: document.getElementById("ciudad").value,
+                color: document.getElementById("color").value,
+                tipo: document.getElementById("tipo").value,
+                habilidad: document.getElementById("habilidad").value,
+                frase: document.getElementById("frase").value
+            };
+            
+            let url = "/agregarPersonaje";
+            let method = "POST";
+            
+            if (personajeId) {
+                url = `/actualizarPersonaje/${personajeId}`;
+                method = "PUT";
             }
             
-            data.forEach(personaje => {
-                const item = document.createElement('li');
-                item.classList.add("card");
-                const sanitizados = {};
-                for (const key in personaje) {
-                    sanitizados[key] = typeof personaje[key] === 'string' 
-                        ? personaje[key].replace(/</g, '&lt;').replace(/>/g, '&gt;')
-                        : personaje[key];
+            fetch(url, {
+                method: method,
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify(personajeData),
+                credentials: 'include'
+            })
+            .then(manejarRespuesta)
+            .then(respuesta => {
+                mostrarMensaje(respuesta, "exito");
+                document.getElementById("personajeForm").reset();
+                document.getElementById("personajeId").value = "";
+                document.getElementById("submitBtn").textContent = "Agregar";
+                document.getElementById("cancelBtn").style.display = "none";
+                cargarPersonajes();
+            })
+            .catch(error => {
+                mostrarMensaje(error.message, "error");
+            });
+        });
+
+        function cancelarEdicion() {
+            document.getElementById("personajeForm").reset();
+            document.getElementById("personajeId").value = "";
+            document.getElementById("submitBtn").textContent = "Agregar";
+            document.getElementById("cancelBtn").style.display = "none";
+        }
+
+        function cargarPersonajes() {
+            fetch("/obtenerPersonajes", {
+                credentials: 'include'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        throw new Error("Debes iniciar sesión para ver los personajes");
+                    } else {
+                        throw new Error("Error al obtener personajes");
+                    }
+                }
+                return response.json();
+            })
+            .then(personajes => {
+                const listaDiv = document.getElementById("listaPersonajes");
+                listaDiv.innerHTML = "";
+                
+                if (personajes.length === 0) {
+                    listaDiv.innerHTML = "<p>No hay personajes registrados</p>";
+                    return;
                 }
                 
-                item.innerHTML = `<strong>ID:</strong> ${sanitizados.id}
-                <br><strong>Nombre:</strong> ${sanitizados.nombre}
-                <br><strong>Edad:</strong> ${sanitizados.edad}
-                <br><strong>Ocupación:</strong> ${sanitizados.ocupacion}
-                <br><strong>Ciudad:</strong> ${sanitizados.ciudad}
-                <br><strong>Color favorito:</strong> ${sanitizados.color}
-                <br><strong>Tipo:</strong> ${sanitizados.tipo}
-                <br><strong>Habilidad:</strong> ${sanitizados.habilidad}
-                <br><strong>Frase:</strong> "${sanitizados.frase}"`;
-                listaElement.appendChild(item);
+                personajes.forEach(personaje => {
+                    const card = document.createElement("div");
+                    card.className = "card";
+                    card.innerHTML = `
+                        <h3>${personaje.nombre}</h3>
+                        <p><strong>Edad:</strong> ${personaje.edad}</p>
+                        <p><strong>Ocupación:</strong> ${personaje.ocupacion}</p>
+                        <p><strong>Ciudad:</strong> ${personaje.ciudad}</p>
+                        <p><strong>Color:</strong> ${personaje.color}</p>
+                        <p><strong>Tipo:</strong> ${personaje.tipo}</p>
+                        <p><strong>Habilidad:</strong> ${personaje.habilidad}</p>
+                        <p><strong>Frase:</strong> ${personaje.frase}</p>
+                        <div class="acciones">
+                            <button class="editar" onclick="editarPersonaje(${personaje.id})">Editar</button>
+                            <button class="eliminar" onclick="eliminarPersonaje(${personaje.id})">Eliminar</button>
+                        </div>
+                    `;
+                    listaDiv.appendChild(card);
+                });
+            })
+            .catch(error => {
+                mostrarMensaje(error.message, "error");
             });
-        })
-        .catch(error => {
-            loadingElement.style.display = 'none';
-            listaElement.innerHTML = `<p class="error">Error: ${error.message}</p>`;
-        });
-    }
-
-    function actualizarPersonaje() {
-        const campos = ['id', 'nombre', 'edad', 'ocupacion', 'ciudad', 'color', 'tipo', 'habilidad', 'frase'];
-        if (!validarFormulario(campos, 'Actualizar', 'errorActualizar')) return;
-        
-        const id = document.getElementById('idActualizar').value.trim();
-        
-        const datos = {};
-        campos.slice(1).forEach(campo => { 
-            datos[campo] = document.getElementById(campo + 'Actualizar').value.trim();
-        });
-        
-        datos.edad = Number(datos.edad);
-        
-        fetch(`${API_URL}/actualizarPersonaje/${id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify(datos)
-        })
-        .then(response => {
-            if (!response.ok) {
-                return response.text().then(text => {
-                    throw new Error(text || 'Ocurrió un error al actualizar el personaje');
-                });
-            }
-            return response.text();
-        })
-        .then(data => {
-            alert(data);
-            document.getElementById('formActualizar').reset();
-            obtenerPersonajes();
-        })
-        .catch(error => {
-            mostrarError('errorActualizar', error.message);
-        });
-    }
-
-    function eliminarPersonaje() {
-        if (!validarFormulario(['id'], 'Eliminar', 'errorEliminar')) return;
-        
-        const id = document.getElementById('idEliminar').value.trim();
-        
-        if (!confirm(`¿Estás seguro de eliminar el personaje con ID ${id}?`)) {
-            return;
         }
-        
-        fetch(`${API_URL}/eliminarPersonaje/${id}`, {
-            method: 'DELETE'
-        })
-        .then(response => {
-            if (!response.ok) {
-                return response.text().then(text => {
-                    throw new Error(text || 'Ocurrió un error al eliminar el personaje');
+
+        function editarPersonaje(id) {
+            fetch(`/obtenerPersonajes`, {
+                credentials: 'include'
+            })
+            .then(response => response.json())
+            .then(personajes => {
+                const personaje = personajes.find(p => p.id === id);
+                if (personaje) {
+                    document.getElementById("nombre").value = personaje.nombre;
+                    document.getElementById("edad").value = personaje.edad;
+                    document.getElementById("ocupacion").value = personaje.ocupacion;
+                    document.getElementById("ciudad").value = personaje.ciudad;
+                    document.getElementById("color").value = personaje.color;
+                    document.getElementById("tipo").value = personaje.tipo;
+                    document.getElementById("habilidad").value = personaje.habilidad;
+                    document.getElementById("frase").value = personaje.frase;
+                    document.getElementById("personajeId").value = personaje.id;
+                    
+                    document.getElementById("submitBtn").textContent = "Actualizar";
+                    document.getElementById("cancelBtn").style.display = "block";
+                
+                    document.getElementById("personajeForm").scrollIntoView({ behavior: 'smooth' });
+                }
+            })
+            .catch(error => {
+                mostrarMensaje("Error al obtener datos del personaje", "error");
+            });
+        }
+
+        function eliminarPersonaje(id) {
+            if (confirm("¿Estás seguro de que deseas eliminar este personaje?")) {
+                fetch(`/eliminarPersonaje/${id}`, {
+                    method: "DELETE",
+                    credentials: 'include'
+                })
+                .then(manejarRespuesta)
+                .then(respuesta => {
+                    mostrarMensaje(respuesta, "exito");
+                    cargarPersonajes();
+                })
+                .catch(error => {
+                    mostrarMensaje(error.message, "error");
                 });
             }
-            return response.text();
-        })
-        .then(data => {
-            alert(data);
-            document.getElementById('formEliminar').reset();
-            obtenerPersonajes();
-        })
-        .catch(error => {
-            mostrarError('errorEliminar', error.message);
-        });
-    }
+        }
 
-    document.addEventListener('DOMContentLoaded', obtenerPersonajes);
-</script>
+        document.addEventListener("DOMContentLoaded", function() {
+            cargarPersonajes();
+        });
+    </script>
 </body>
 </html>
