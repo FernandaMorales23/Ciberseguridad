@@ -42,6 +42,12 @@ app.post("/register", (req, res) => {
     const { usuario, password } = req.body;
     if (!usuario || !password) return res.status(400).send("Datos incompletos");
     
+    const regexUsuario = /^[a-zA-Z0-9_-]{3,20}$/;
+    
+    if (!regexUsuario.test(usuario)) {
+        return res.status(400).send("Nombre de usuario inválido. Solo se permiten letras, números, guiones y guiones bajos (entre 3 y 20 caracteres)");
+    }
+    
     const hashedPassword = bcrypt.hashSync(password, 10);
     
     con.query("SELECT * FROM usuarios WHERE usuario = ?", [usuario], (err, resultados) => {
@@ -79,9 +85,23 @@ app.get("/logout", (req, res) => {
 
 app.post("/agregarPersonaje", autenticar, (req, res) => {
     const { nombre, edad, ocupacion, ciudad, color, tipo, habilidad, frase } = req.body;
-    
+
     if (!nombre || !edad || !ocupacion || !ciudad || !color || !tipo || !habilidad || !frase) {
         return res.status(400).send("Todos los campos son obligatorios");
+    }
+
+    const soloLetras = /^[A-Za-zÁÉÍÓÚáéíóúÑñ\s]+$/;
+    const soloNumeros = /^\d+$/;
+
+    const camposTexto = { nombre, ocupacion, ciudad, color, tipo, habilidad, frase };
+    for (const [campo, valor] of Object.entries(camposTexto)) {
+        if (!soloLetras.test(valor)) {
+            return res.status(400).send(`El campo "${campo}" solo debe contener letras y espacios`);
+        }
+    }
+
+    if (!soloNumeros.test(edad)) {
+        return res.status(400).send("La edad debe contener solo números");
     }
 
     const edadNum = parseInt(edad);
@@ -90,7 +110,7 @@ app.post("/agregarPersonaje", autenticar, (req, res) => {
     }
 
     const sql = "INSERT INTO personaje (nombre, edad, ocupacion, ciudad, color, tipo, habilidad, frase) VALUES (?, ?, ?, ?, ?, ?, ?, ?)";
-    
+
     con.query(sql, [nombre, edadNum, ocupacion, ciudad, color, tipo, habilidad, frase], (err, result) => {
         if (err) {
             console.error("Error al agregar personaje:", err.sqlMessage);
@@ -99,6 +119,7 @@ app.post("/agregarPersonaje", autenticar, (req, res) => {
         res.send("Personaje agregado con éxito");
     });
 });
+
 
 app.get("/obtenerPersonajes", autenticar, (req, res) => {
     con.query("SELECT * FROM personaje", (err, results) => {
