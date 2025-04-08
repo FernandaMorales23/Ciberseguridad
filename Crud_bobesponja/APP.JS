@@ -40,26 +40,35 @@ function autenticar(req, res, next) {
 
 app.post("/register", (req, res) => {
     const { usuario, password } = req.body;
-    if (!usuario || !password) return res.status(400).send("Datos incompletos");
-    
+
+    if (!usuario || !password) {
+        return res.status(400).send("Datos incompletos");
+    }
+
     const regexUsuario = /^[a-zA-Z0-9_-]{3,20}$/;
-    
+    const regexPassword = /^(?=.*[A-Z])(?=.*[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]).{8,}$/;
+
     if (!regexUsuario.test(usuario)) {
         return res.status(400).send("Nombre de usuario inválido. Solo se permiten letras, números, guiones y guiones bajos (entre 3 y 20 caracteres)");
     }
-    
+
+    if (!regexPassword.test(password)) {
+        return res.status(400).send("La contraseña debe tener al menos 8 caracteres, una letra mayúscula y un carácter especial");
+    }
+
     const hashedPassword = bcrypt.hashSync(password, 10);
-    
+
     con.query("SELECT * FROM usuarios WHERE usuario = ?", [usuario], (err, resultados) => {
         if (err) return res.status(500).send("Error en la base de datos");
         if (resultados.length > 0) return res.status(400).send("El usuario ya existe");
-        
+
         con.query("INSERT INTO usuarios (usuario, password) VALUES (?, ?)", [usuario, hashedPassword], (err) => {
             if (err) return res.status(500).send("Error al registrar usuario");
             res.send("Usuario registrado exitosamente");
         });
     });
 });
+
 
 app.post("/login", (req, res) => {
     const { usuario, password } = req.body;
