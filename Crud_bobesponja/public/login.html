@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - CRUD Bob Esponja</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f4f4;
+            margin: 0;
+            padding: 20px;
+            text-align: center;
+        }
+        h1, h2 {
+            color: #ffcc00;
+            text-shadow: 2px 2px 3px #000;
+        }
+        .container {
+            max-width: 600px;
+            margin: 20px auto;
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+        }
+        input, button {
+            width: 100%;
+            padding: 10px;
+            margin: 5px 0;
+            border-radius: 5px;
+            border: 1px solid #ccc;
+            font-size: 16px;
+        }
+        button {
+            background-color: #ffcc00;
+            border: none;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        button:hover {
+            background-color: #ff9900;
+        }
+        #mensaje {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+            display: none;
+        }
+        .exito {
+            background-color: #dff0d8;
+            color: #3c763d;
+            border: 1px solid #d6e9c6;
+        }
+        .error {
+            background-color: #f2dede;
+            color: #a94442;
+            border: 1px solid #ebccd1;
+        }
+    </style>
+</head>
+<body>
+    <h1>Crud de Bob Esponja</h1>
+
+    <div id="mensaje"></div>
+
+    <div class="container">
+        <h2>Registro de Usuario</h2>
+        <form id="registerForm">
+            <input type="text" id="newUsuario" placeholder="Nuevo Usuario" required>
+            <input type="password" id="newPassword" placeholder="Nueva Contraseña" required>
+            <button type="submit">Registrarse</button>
+        </form>
+    </div>
+
+    <div class="container">
+        <h2>Iniciar Sesión</h2>
+        <form id="loginForm">
+            <input type="text" id="usuario" placeholder="Usuario" required>
+            <input type="password" id="password" placeholder="Contraseña" required>
+            <button type="submit">Iniciar sesión</button>
+        </form>
+    </div>
+
+    <script>
+        fetch("/check-session", {
+            credentials: 'include'
+        })
+        .then(response => {
+            if (response.ok) {
+                window.location.href = "/crud.html";
+            }
+        })
+        .catch(error => {
+            console.error("Error al verificar sesión:", error);
+        });
+
+        function mostrarMensaje(mensaje, tipo) {
+            const mensajeDiv = document.getElementById("mensaje");
+            mensajeDiv.textContent = mensaje;
+            mensajeDiv.className = tipo;
+            mensajeDiv.style.display = "block";
+            
+            setTimeout(() => {
+                mensajeDiv.style.display = "none";
+            }, 3000);
+        }
+
+        function manejarRespuesta(response) {
+            if (!response.ok) {
+                return response.text().then(texto => {
+                    throw new Error(texto);
+                });
+            }
+            return response.text();
+        }
+
+        document.getElementById("registerForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            fetch("/register", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    usuario: document.getElementById("newUsuario").value,
+                    password: document.getElementById("newPassword").value
+                })
+            })
+            .then(manejarRespuesta)
+            .then(respuesta => {
+                mostrarMensaje(respuesta, "exito");
+                document.getElementById("registerForm").reset();
+            })
+            .catch(error => {
+                mostrarMensaje(error.message, "error");
+            });
+        });
+
+        document.getElementById("loginForm").addEventListener("submit", function(event) {
+            event.preventDefault();
+            fetch("/login", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                    usuario: document.getElementById("usuario").value,
+                    password: document.getElementById("password").value
+                })
+            })
+            .then(manejarRespuesta)
+            .then(respuesta => {
+                mostrarMensaje(respuesta, "exito");
+                document.getElementById("loginForm").reset();
+                setTimeout(() => {
+                    window.location.href = "/crud.html";
+                }, 1000);
+            })
+            .catch(error => {
+                mostrarMensaje(error.message, "error");
+            });
+        });
+    </script>
+</body>
+</html>

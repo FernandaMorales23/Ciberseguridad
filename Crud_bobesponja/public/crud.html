@@ -67,6 +67,11 @@
             background-color: #f44336;
             color: white;
         }
+        .disabled {
+            background-color: #cccccc;
+            color: #666666;
+            cursor: not-allowed;
+        }
         #mensaje {
             padding: 10px;
             margin: 10px 0;
@@ -83,31 +88,45 @@
             color: #a94442;
             border: 1px solid #ebccd1;
         }
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .logout-btn {
+            background-color: #f44336;
+            color: white;
+            width: auto;
+            padding: 8px 15px;
+        }
+        .user-info {
+            background-color: #4CAF50;
+            color: white;
+            padding: 8px 15px;
+            border-radius: 5px;
+            margin-right: 10px;
+        }
+        .creador-tag {
+            display: inline-block;
+            background-color: #2196F3;
+            color: white;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 12px;
+            margin-left: 10px;
+        }
     </style>
 </head>
 <body>
-    <h1>CRUD de Personajes de Bob Esponja</h1>
+    <div class="header">
+        <h1>CRUD de Bob Esponja</h1>
+        <div style="display: flex; align-items: center;">
+            <span id="userInfo" class="user-info">Usuario: Cargando...</span>
+            <button class="logout-btn" onclick="logout()">Cerrar Sesión</button>
+        </div>
+    </div>
 
     <div id="mensaje"></div>
-
-    <div class="container">
-        <h2>Registro de Usuario</h2>
-        <form id="registerForm">
-            <input type="text" id="newUsuario" placeholder="Nuevo Usuario" required>
-            <input type="password" id="newPassword" placeholder="Nueva Contraseña" required>
-            <button type="submit">Registrarse</button>
-        </form>
-    </div>
-
-    <div class="container">
-        <h2>Iniciar Sesión</h2>
-        <form id="loginForm">
-            <input type="text" id="usuario" placeholder="Usuario" required>
-            <input type="password" id="password" placeholder="Contraseña" required>
-            <button type="submit">Iniciar sesión</button>
-        </form>
-        <button onclick="logout()">Cerrar Sesión</button>
-    </div>
 
     <div class="container">
         <h2>Agregar Personaje</h2>
@@ -133,6 +152,43 @@
     </div>
 
     <script>
+        let usuarioActual = '';
+        
+        fetch("/check-session", {
+            credentials: 'include'
+        })
+        .then(response => {
+            if (!response.ok) {
+                window.location.href = "/login.html";
+            } else {
+                obtenerUsuarioActual();
+            }
+        })
+        .catch(error => {
+            console.error("Error al verificar sesión:", error);
+            window.location.href = "/login.html";
+        });
+        
+        function obtenerUsuarioActual() {
+            fetch("/usuario-actual", {
+                credentials: 'include'
+            })
+            .then(response => {
+                if (!response.ok) {
+                    throw new Error("No se pudo obtener la información del usuario");
+                }
+                return response.json();
+            })
+            .then(data => {
+                usuarioActual = data.usuario;
+                document.getElementById("userInfo").textContent = `Usuario: ${usuarioActual}`;
+            })
+            .catch(error => {
+                console.error("Error:", error);
+                mostrarMensaje(error.message, "error");
+            });
+        }
+
         function mostrarMensaje(mensaje, tipo) {
             const mensajeDiv = document.getElementById("mensaje");
             mensajeDiv.textContent = mensaje;
@@ -146,53 +202,16 @@
 
         function manejarRespuesta(response) {
             if (!response.ok) {
+                if (response.status === 401) {
+                    window.location.href = "/login.html";
+                    throw new Error("Sesión expirada. Por favor inicia sesión nuevamente.");
+                }
                 return response.text().then(texto => {
                     throw new Error(texto);
                 });
             }
             return response.text();
         }
-
-        document.getElementById("registerForm").addEventListener("submit", function(event) {
-            event.preventDefault();
-            fetch("/register", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    usuario: document.getElementById("newUsuario").value,
-                    password: document.getElementById("newPassword").value
-                })
-            })
-            .then(manejarRespuesta)
-            .then(respuesta => {
-                mostrarMensaje(respuesta, "exito");
-                document.getElementById("registerForm").reset();
-            })
-            .catch(error => {
-                mostrarMensaje(error.message, "error");
-            });
-        });
-
-        document.getElementById("loginForm").addEventListener("submit", function(event) {
-            event.preventDefault();
-            fetch("/login", {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({
-                    usuario: document.getElementById("usuario").value,
-                    password: document.getElementById("password").value
-                })
-            })
-            .then(manejarRespuesta)
-            .then(respuesta => {
-                mostrarMensaje(respuesta, "exito");
-                document.getElementById("loginForm").reset();
-                cargarPersonajes();
-            })
-            .catch(error => {
-                mostrarMensaje(error.message, "error");
-            });
-        });
 
         function logout() {
             fetch("/logout", {
@@ -201,7 +220,9 @@
             .then(manejarRespuesta)
             .then(respuesta => {
                 mostrarMensaje(respuesta, "exito");
-                document.getElementById("listaPersonajes").innerHTML = "";
+                setTimeout(() => {
+                    window.location.href = "/login.html";
+                }, 1000);
             })
             .catch(error => {
                 mostrarMensaje(error.message, "error");
@@ -265,7 +286,8 @@
             .then(response => {
                 if (!response.ok) {
                     if (response.status === 401) {
-                        throw new Error("Debes iniciar sesión para ver los personajes");
+                        window.location.href = "/login.html";
+                        throw new Error("Sesión expirada. Por favor inicia sesión nuevamente.");
                     } else {
                         throw new Error("Error al obtener personajes");
                     }
@@ -284,8 +306,30 @@
                 personajes.forEach(personaje => {
                     const card = document.createElement("div");
                     card.className = "card";
+                    
+                    const esCreador = personaje.creador === usuarioActual;
+                    
+                    const botonesAcciones = `
+                        <div class="acciones">
+                            <button class="editar ${!esCreador ? 'disabled' : ''}" 
+                                onclick="${esCreador ? `editarPersonaje(${personaje.id})` : 'mostrarMensajeSinPermiso()'}"
+                                ${!esCreador ? 'disabled' : ''}>
+                                Editar
+                            </button>
+                            <button class="eliminar ${!esCreador ? 'disabled' : ''}" 
+                                onclick="${esCreador ? `eliminarPersonaje(${personaje.id})` : 'mostrarMensajeSinPermiso()'}"
+                                ${!esCreador ? 'disabled' : ''}>
+                                Eliminar
+                            </button>
+                        </div>
+                    `;
+                    
+                    const creadorTag = personaje.creador ? 
+                        `<span class="creador-tag">Creado por: ${personaje.creador}${esCreador ? ' (tú)' : ''}</span>` : 
+                        '<span class="creador-tag">Creador desconocido</span>';
+                    
                     card.innerHTML = `
-                        <h3>${personaje.nombre}</h3>
+                        <h3>${personaje.nombre} ${creadorTag}</h3>
                         <p><strong>Edad:</strong> ${personaje.edad}</p>
                         <p><strong>Ocupación:</strong> ${personaje.ocupacion}</p>
                         <p><strong>Ciudad:</strong> ${personaje.ciudad}</p>
@@ -293,10 +337,7 @@
                         <p><strong>Tipo:</strong> ${personaje.tipo}</p>
                         <p><strong>Habilidad:</strong> ${personaje.habilidad}</p>
                         <p><strong>Frase:</strong> ${personaje.frase}</p>
-                        <div class="acciones">
-                            <button class="editar" onclick="editarPersonaje(${personaje.id})">Editar</button>
-                            <button class="eliminar" onclick="eliminarPersonaje(${personaje.id})">Eliminar</button>
-                        </div>
+                        ${botonesAcciones}
                     `;
                     listaDiv.appendChild(card);
                 });
@@ -306,14 +347,32 @@
             });
         }
 
+        function mostrarMensajeSinPermiso() {
+            mostrarMensaje("No tienes permiso para modificar este personaje. Solo el creador puede editarlo o eliminarlo.", "error");
+        }
+
         function editarPersonaje(id) {
             fetch(`/obtenerPersonajes`, {
                 credentials: 'include'
             })
-            .then(response => response.json())
+            .then(response => {
+                if (!response.ok) {
+                    if (response.status === 401) {
+                        window.location.href = "/login.html";
+                        throw new Error("Sesión expirada. Por favor inicia sesión nuevamente.");
+                    }
+                    throw new Error("Error al obtener datos");
+                }
+                return response.json();
+            })
             .then(personajes => {
                 const personaje = personajes.find(p => p.id === id);
                 if (personaje) {
+                    if (personaje.creador !== usuarioActual) {
+                        mostrarMensaje("No tienes permiso para editar este personaje.", "error");
+                        return;
+                    }
+                    
                     document.getElementById("nombre").value = personaje.nombre;
                     document.getElementById("edad").value = personaje.edad;
                     document.getElementById("ocupacion").value = personaje.ocupacion;
@@ -331,7 +390,7 @@
                 }
             })
             .catch(error => {
-                mostrarMensaje("Error al obtener datos del personaje", "error");
+                mostrarMensaje(error.message, "error");
             });
         }
 
